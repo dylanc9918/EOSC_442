@@ -1,5 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib.ticker import MaxNLocator
+
+from datetime import datetime
 import scipy
 import numpy as np
 import glob
@@ -25,3 +29,17 @@ df.columns = df.columns.str.replace(' ', '')
 
 # renamed to date to make it easier to index
 df = df.rename(columns={"DateTime_": "date"})
+
+
+# Formats the date column from a string to datetime column in pandas
+df['date'] = pd.to_datetime(df['date'], format=" %m/%d/%Y %H%M:%S %p ")
+
+plt.scatter(df["date"], df["CO_ppm"])
+dtFmt = mdates.DateFormatter('%Y')  # define the formatting
+# apply the format to the desired axis
+plt.gca().xaxis.set_major_formatter(dtFmt)
+plt.gca().yaxis.set_major_locator(MaxNLocator(prune='lower'))
+
+plt.ylabel("Concentration (ppm)")
+plt.xlabel("Date")
+plt.show()
