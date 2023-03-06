@@ -80,5 +80,3 @@ plt.xlabel("Date")
 plt.show()
 
 
-# create an average of each month for CO levels
-plt.plot(df.groupby(df.date.dt.month)['CO_ppm'].mean())
