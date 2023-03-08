@@ -11,8 +11,15 @@ import os
 
 path_to_folder = r'data/'
 
-csv_files = ["YVRStationData_2013-2015.csv", "YVRStationData_2015-2017.csv",
-             "YVRStationData_2017-2019.csv", "YVRStationData_2019-2021.csv", "YVRStationData_2021-2023.csv"]
+csv_files = [
+    # "YVRStationData_1998-1999.csv", "YVRStationData_1999-2001.csv",
+    #          "YVRStationData_2001-2003.csv",
+    #          "YVRStationData_2003-2005.csv", "YVRStationData_2005-2007.csv", "YVRStationData_2007-2009.csv",
+    #          "YVRStationData_2009-2011.csv",
+    # "YVRStationData_2011-2013csv",
+    "YVRStationData_2013-2015.csv",
+    "YVRStationData_2015-2017.csv",
+    "YVRStationData_2017-2019.csv", "YVRStationData_2019-2021.csv", "YVRStationData_2021-2023.csv"]
 
 df = pd.DataFrame()
 
@@ -27,8 +34,12 @@ df.columns = df.columns.map('_'.join)
 # replace whitespace within columns
 df.columns = df.columns.str.replace(' ', '')
 
-# renamed to date to make it easier to index
+# renamed to columns to make it easier to index
 df = df.rename(columns={"DateTime_": "date"})
+df = df.rename(columns={"TEMP_MEAN_°C": "temp"})
+df = df.rename(columns={"PM25_ug/m3": "PM25"})
+df = df.rename(columns={"PM10_ug/m3": "PM10"})
+
 
 # change all columns to numeric except for date
 cols = [i for i in df.columns if i not in ["date"]]
@@ -49,9 +60,57 @@ df['date'] = pd.to_datetime(df['date'], format=" %m/%d/%Y %H%M:%S %p ")
 monthly_avg = df.groupby(pd.PeriodIndex(
     df['date'], freq="M")).mean()
 
+year_avg = df.groupby(pd.PeriodIndex(
+    df['date'], freq="Y")).mean()
+
+year_avg.plot(subplots=True, layout=(
+    5, 2), grid=True, sharex=True, figsize=(15, 8))
+plt.tight_layout()
+
 monthly_avg.plot(subplots=True, layout=(
     5, 2), grid=True, sharex=True, figsize=(15, 8))
 plt.tight_layout()
+
+
+# creates season mapping based on months in dataframe
+season = ((df.date.dt.month % 12 + 3) //
+          3).map({1: 'DJF', 2: 'MAM', 3: 'JJA', 4: 'SON'})
+
+# adds the seasonal mapping to the dataframe
+df['season'] = season
+
+
+# groups by months
+seasonal_avg = df.groupby([pd.PeriodIndex(
+    df['date'], freq="M"), "season"]).mean()
+
+seasonal_avg.plot(subplots=True, grid=True, sharex=True, figsize=(15, 8))
+plt.tight_layout()
+
+
+# list of  gasses and their respective seasons
+# 0 = Winter (DJF)
+# 0 = Spring (MAM)
+# 0 = Summer (JJA)
+# 0 = Fall (SON)
+
+
+seasonal_avg = seasonal_avg.groupby("season")
+
+# creates list of gasses and their seasons
+season_CO_list = list(seasonal_avg.CO_ppm)
+season_O3_list = list(seasonal_avg.O3_ppb)
+season_PM25_list = list(seasonal_avg.PM25)
+season_PM10_list = list(seasonal_avg.PM10)
+season_NO2_list = list(seasonal_avg.NO2_ppb)
+season_temp_list = list(seasonal_avg.temp)
+
+fig, ax = plt.subplots(4, sharex=True)
+fig.tight_layout(h_pad=2)
+
+for i in range(4):
+    ax[i].scatter(season_CO_list[i][1], season_temp_list[i][1])
+
 
 # fig, ax = plt.subplots(3, 2, sharex=True)
 # fig.tight_layout(h_pad=2)
