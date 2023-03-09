@@ -63,7 +63,8 @@ monthly_avg = df.groupby(pd.PeriodIndex(
 
 fig1, ax1 = plt.subplots(len(monthly_avg.columns),
                          figsize=[25, 15], sharex=True)
-fig1.tight_layout()
+fig1.tight_layout(pad=5)
+fig1.suptitle("Monthly Averages")
 
 titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
           "Temperature", "Precipitation Total"]
@@ -77,7 +78,7 @@ for i in range(len(monthly_avg.columns)):
     # activate the subplot
 
     # plot the time-series
-    ax1[i].plot(monthly_avg.index.timestamp(),
+    ax1[i].plot(monthly_avg.index.to_timestamp(),
                 monthly_avg.iloc[:, i], color=colors[i])
 
     # add figure elements
@@ -92,7 +93,9 @@ year_avg = df.groupby(pd.PeriodIndex(
 
 # creates plots of Yearly averages
 fig, ax = plt.subplots(len(year_avg.columns), figsize=[25, 15], sharex=True)
-fig.tight_layout()
+fig.tight_layout(pad=5)
+fig.suptitle("Yearly Averages")
+
 
 titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
           "Temperature", "Precipitation Total"]
@@ -106,7 +109,7 @@ for i in range(len(year_avg.columns)):
     # activate the subplot
 
     # plot the time-series
-    ax[i].plot(year_avg.index.strftime("%Y"),
+    ax[i].plot(year_avg.index.to_timestamp(),
                year_avg.iloc[:, i], color=colors[i])
 
     # add figure elements
@@ -155,9 +158,15 @@ season_temp_list = list(seasonal_avg.temp)
 
 fig, ax = plt.subplots(4, sharex=True)
 fig.tight_layout(h_pad=2)
+fig.suptitle("Seasonal Correlation Graph Between CO and Temperature", y=1)
 
+
+fig.text(0.5, 0.00, "CO Concentration ppm", ha='center')
+fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
+season = ["Winter", "Spring", "Summer", "Fall"]
 for i in range(4):
     ax[i].scatter(season_CO_list[i][1], season_temp_list[i][1])
+    ax[i].set_title(season[i])
 
 
 # fig, ax = plt.subplots(3, 2, sharex=True)
