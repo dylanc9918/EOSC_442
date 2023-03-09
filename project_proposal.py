@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.ticker import MaxNLocator
-
+import seaborn as sns
 from datetime import datetime
 import scipy
 import numpy as np
@@ -49,7 +49,7 @@ for col in cols:
 
 # Remove empty Station column and other unecessary columns
 df = df.drop(columns=["Station:VancouverInternationalAirport#2-_", "WSPD_SCLR_m/s", 'WDIR_SCLR_Deg.',
-             'WSPD_VECT_m/s', 'WDIR_VECT_Deg.', 'ATM_PRESS_1HR_kPa', 'HUMIDITY_%RH', 'RAD_TOTAL_W/M**2'])
+             'WSPD_VECT_m/s', 'WDIR_VECT_Deg.', 'ATM_PRESS_1HR_kPa', 'HUMIDITY_%RH', 'RAD_TOTAL_W/M**2', "NOx_ppb", 'SO2_ppb', 'NO_ppb'])
 
 
 # Formats the date column from a string to datetime column in pandas
@@ -60,12 +60,60 @@ df['date'] = pd.to_datetime(df['date'], format=" %m/%d/%Y %H%M:%S %p ")
 monthly_avg = df.groupby(pd.PeriodIndex(
     df['date'], freq="M")).mean()
 
+
+fig1, ax1 = plt.subplots(len(monthly_avg.columns),
+                         figsize=[25, 15], sharex=True)
+fig1.tight_layout()
+
+titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
+          "Temperature", "Precipitation Total"]
+
+units = ["ppm", "ppb", "ppb", "µg/m³", "µg/m³", "Celsius", "mm"]
+
+colors = sns.color_palette(None, len(monthly_avg.columns))
+
+# loop through each column of the dataframe
+for i in range(len(monthly_avg.columns)):
+    # activate the subplot
+
+    # plot the time-series
+    ax1[i].plot(monthly_avg.index.timestamp(),
+                monthly_avg.iloc[:, i], color=colors[i])
+
+    # add figure elements
+    ax1[i].set_title(titles[i])
+    ax1[i].set_ylabel(units[i])
+    plt.xlabel("Date")
+
+
 year_avg = df.groupby(pd.PeriodIndex(
     df['date'], freq="Y")).mean()
 
-year_avg.plot(subplots=True, layout=(
-    5, 2), grid=True, sharex=True, figsize=(15, 8))
-plt.tight_layout()
+
+# creates plots of Yearly averages
+fig, ax = plt.subplots(len(year_avg.columns), figsize=[25, 15], sharex=True)
+fig.tight_layout()
+
+titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
+          "Temperature", "Precipitation Total"]
+
+units = ["ppm", "ppb", "ppb", "µg/m³", "µg/m³", "Celsius", "mm"]
+
+colors = sns.color_palette(None, len(year_avg.columns))
+
+# loop through each column of the dataframe
+for i in range(len(year_avg.columns)):
+    # activate the subplot
+
+    # plot the time-series
+    ax[i].plot(year_avg.index.strftime("%Y"),
+               year_avg.iloc[:, i], color=colors[i])
+
+    # add figure elements
+    ax[i].set_title(titles[i])
+    ax[i].set_ylabel(units[i])
+    plt.xlabel("Date")
+
 
 monthly_avg.plot(subplots=True, layout=(
     5, 2), grid=True, sharex=True, figsize=(15, 8))
