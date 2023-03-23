@@ -15,11 +15,7 @@ import statsmodels.api as sm
 path_to_folder = r'data/'
 
 csv_files = [
-    # "YVRStationData_1998-1999.csv", "YVRStationData_1999-2001.csv",
-    #          "YVRStationData_2001-2003.csv",
-    #          "YVRStationData_2003-2005.csv", "YVRStationData_2005-2007.csv", "YVRStationData_2007-2009.csv",
-    #          "YVRStationData_2009-2011.csv",
-    # "YVRStationData_2011-2013csv",
+
     "YVRStationData_2013-2015.csv",
     "YVRStationData_2015-2017.csv",
     "YVRStationData_2017-2019.csv", "YVRStationData_2019-2021.csv", "YVRStationData_2021-2023.csv"]
