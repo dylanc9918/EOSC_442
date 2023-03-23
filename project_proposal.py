@@ -8,6 +8,9 @@ import scipy
 import numpy as np
 import glob
 import os
+from sklearn.linear_model import LinearRegression
+import scipy.stats as stat
+import statsmodels.api as sm
 
 path_to_folder = r'data/'
 
@@ -156,44 +159,63 @@ season_PM10_list = list(seasonal_avg.PM10)
 season_NO2_list = list(seasonal_avg.NO2_ppb)
 season_temp_list = list(seasonal_avg.temp)
 
-fig, ax = plt.subplots(4, sharex=True)
-fig.tight_layout(h_pad=2)
-fig.suptitle("Seasonal Correlation Graph Between CO and Temperature", y=1)
+list_gas = [season_CO_list,
+            season_O3_list,
+            season_PM25_list,
+            season_PM10_list,
+            season_NO2_list]
+# creates subplots of each season and looks at their monthly distribution of temperature vs concentration for each graph. Creates a linear regression line and in addition reports the R-squared values and the p-values
+
+list_gas = [season_CO_list,
+            season_NO2_list,
+            season_O3_list,
+            season_PM25_list,
+            season_PM10_list]
 
 
-fig.text(0.5, 0.00, "CO Concentration ppm", ha='center')
-fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
-season = ["Winter", "Spring", "Summer", "Fall"]
+titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
+          "Temperature", "Precipitation Total"]
+
+for j in range(len(list_gas)):
+    fig.text(0.5, 0.00, "Units", ha='center')
+    fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
+    season = ["Winter", "Spring", "Summer", "Fall"]
+    fig, ax = plt.subplots(4)
+    fig.tight_layout(h_pad=2)
+    fig.suptitle("Seasonal Correlation Graph between " +
+                 titles[j] + " and Temperature", y=1.05)
+
+    for i in range(4):
+        ax[i].scatter(list_gas[j][i][1], season_temp_list[i][1])
+        ax[i].set_title(season[i])
+        model = sm.OLS(season_temp_list[i][1],
+                       list_gas[j][i][1], missing='drop').fit()
+        y_predict = model.predict(list_gas[j][i][1])
+        rmse = sm.tools.eval_measures.rmse(season_temp_list[i][1], y_predict)
+
+        text = 'R-Squared:{:.4f} \np-Value:{:.2E}'.format(
+            model.rsquared, model.pvalues[0])
+        ax[i].plot(list_gas[j][i][1], y_predict,
+                   linestyle="-", color="r")
+        ax[i].annotate(text, xy=(0, 1.1),
+                       xycoords='axes fraction', fontsize=8, color='r')
+
+    fig.text(0.5, 0.00, "CO Concentration ppm", ha='center')
+    fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
+    season = ["Winter", "Spring", "Summer", "Fall"]
+
+
 for i in range(4):
     ax[i].scatter(season_CO_list[i][1], season_temp_list[i][1])
     ax[i].set_title(season[i])
+    model = sm.OLS(season_temp_list[i][1],
+                   season_CO_list[i][1], missing='drop').fit()
+    y_predict = model.predict(season_CO_list[i][1])
+    rmse = sm.tools.eval_measures.rmse(season_temp_list[i][1], y_predict)
 
-
-# fig, ax = plt.subplots(3, 2, sharex=True)
-# fig.tight_layout(h_pad=2)
-
-
-# ax[0, 0].plot(monthly_avg["CO_ppm"])
-# ax[0, 1].plot(df['date'], df["NO_ppb"])
-# ax[1, 0].plot(df['date'], df["NO2_ppb"])
-# ax[1, 1].plot(df['date'], df["O3_ppb"])
-# ax[2, 0].plot(df['date'], df["SO2_ppb"])
-# ax[2, 1].plot(df['date'], df["PM10_ug/m3"])
-
-
-# ax[0, 0].set_title("CO Levels")
-# ax[0, 1].set_title("NO Levels")
-# ax[1, 0].set_title("NO2 Levels")
-# ax[1, 1].set_title("O3 Levels")
-# ax[2, 0].set_title("SO2 Levels")
-# ax[2, 1].set_title("PM10_ug/m3 Levels")
-
-
-# dtFmt = mdates.DateFormatter('%Y')  # define the formatting
-# # apply the format to the desired axis
-# plt.gca().xaxis.set_major_formatter(dtFmt)
-
-
-# plt.ylabel("Concentration (ppm)")
-# plt.xlabel("Date")
-# plt.show()
+    text = 'R-Squared:{:.4f} \np-Value:{:.2E}'.format(
+        co_model.rsquared, co_model.pvalues[0])
+    ax[i].plot(season_CO_list[i][1], y_predict,
+               linestyle="-", color="r")
+    ax[i].annotate(text, xy=(0, 1.2), xycoords='axes fraction',
+                   fontsize=8, color='r')
