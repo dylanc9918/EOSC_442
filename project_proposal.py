@@ -237,37 +237,6 @@ for j in range(len(list_gas)):
                    xycoords='axes fraction', fontsize=8, color='r')
 
 
-# Creates subplots that look at the entire year of data by year
-
-gas_name = ["CO", "NO2", "O3", "PM 2.5", "PM 10"]
-
-titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
-          "Temperature", "Precipitation Total"]
-fig, ax = plt.subplots(len(list_gas))
-fig.tight_layout(h_pad=2)
-fig.text(0.5, 0.00, "Units", ha='center')
-fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
-
-
-for j in range(len(list_gas)):
-    fig.suptitle(
-        "Correlation Graph between gas and Temperature Across all Years", y=1.05)
-
-    ax[j].scatter(df.iloc[:, j+1], df.temp)
-    ax[j].set_title(gas_name[j])
-    model = sm.OLS(df.temp,
-                   df.iloc[:, j+1], missing='drop').fit()
-    y_predict = model.predict(df.iloc[:, j+1])
-    rmse = sm.tools.eval_measures.rmse(df.temp, y_predict)
-
-    text = 'R-Squared:{:.4f} \np-Value:{:.4f}'.format(
-        model.rsquared, model.pvalues[0])
-    ax[j].plot(df.iloc[:, j+1], y_predict,
-               linestyle="-", color="r")
-    ax[j].annotate(text, xy=(0, 1.1),
-                   xycoords='axes fraction', fontsize=8, color='r')
-
-
 # Creates subplots that look at the entire year of data by each year
 gas_name = ["CO", "NO2", "O3", "PM 2.5", "PM 10"]
 
@@ -282,10 +251,10 @@ fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
 
 for j in range(len(gas_name)):
     fig.suptitle("Correlation Graph between " +
-                 gas_name[j] + " and Temperature for Each Year", y=1.05)
-    fig, ax = plt.subplots(len(gas_name))
+                 gas_name[j] + " and Temperature for Each Year", y=1)
+    fig, ax = plt.subplots(len(list_yrs), figsize=(15, 20))
 
-    for i in range(len(list_yrs)):
+    for i in range(len(list_yrs)-1):
         ax[i].scatter(df_group.get_group(list_yrs[i]).iloc[:, j+1],
                       df_group.get_group(list_yrs[i]).temp)
         ax[i].set_title(str(list_yrs[i]))
@@ -297,7 +266,7 @@ for j in range(len(gas_name)):
 
         text = 'R-Squared:{:.4f} \np-Value:{:.4f}'.format(
             model.rsquared, model.pvalues[0])
-        ax[j].plot(df_group.get_group(list_yrs[i]).iloc[:, j+1], y_predict,
+        ax[i].plot(df_group.get_group(list_yrs[i]).iloc[:, j+1], y_predict,
                    linestyle="-", color="r")
-        ax[j].annotate(text, xy=(0, 1.1),
+        ax[i].annotate(text, xy=(0, 1.1),
                        xycoords='axes fraction', fontsize=8, color='r')
