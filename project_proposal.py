@@ -154,12 +154,16 @@ season_PM25_list = list(seasonal_avg.PM25)
 season_PM10_list = list(seasonal_avg.PM10)
 season_NO2_list = list(seasonal_avg.NO2_ppb)
 season_temp_list = list(seasonal_avg.temp)
+season_precip_list = list(seasonal_avg.PRECIP_TOTAL_mm)
+
 
 list_gas = [season_CO_list,
             season_O3_list,
             season_PM25_list,
             season_PM10_list,
             season_NO2_list]
+
+
 # creates subplots of each season and looks at their monthly distribution of temperature vs concentration for each graph. Creates a linear regression line and in addition reports the R-squared values and the p-values
 
 list_gas = [season_CO_list,
@@ -171,6 +175,7 @@ list_gas = [season_CO_list,
 
 titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
           "Temperature", "Precipitation Total"]
+
 
 for j in range(len(list_gas)):
     fig.text(0.5, 0.00, "Units", ha='center')
@@ -201,17 +206,67 @@ for j in range(len(list_gas)):
     season = ["Winter", "Spring", "Summer", "Fall"]
 
 
-for i in range(4):
-    ax[i].scatter(season_CO_list[i][1], season_temp_list[i][1])
-    ax[i].set_title(season[i])
-    model = sm.OLS(season_temp_list[i][1],
-                   season_CO_list[i][1], missing='drop').fit()
-    y_predict = model.predict(season_CO_list[i][1])
-    rmse = sm.tools.eval_measures.rmse(season_temp_list[i][1], y_predict)
+# Creates subplots that look at the entire year of data by year
 
-    text = 'R-Squared:{:.4f} \np-Value:{:.2E}'.format(
-        co_model.rsquared, co_model.pvalues[0])
-    ax[i].plot(season_CO_list[i][1], y_predict,
+gas_name = ["CO", "NO2", "O3", "PM 2.5", "PM 10"]
+
+titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
+          "Temperature", "Precipitation Total"]
+fig, ax = plt.subplots(len(list_gas))
+fig.tight_layout(h_pad=2)
+fig.text(0.5, 0.00, "Units", ha='center')
+fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
+
+
+for j in range(len(list_gas)):
+    fig.suptitle(
+        "Correlation Graph between gas and Temperature Across all Years", y=1.05)
+
+    ax[j].scatter(df.iloc[:, j+1], df.temp)
+    ax[j].set_title(gas_name[j])
+    model = sm.OLS(df.temp,
+                   df.iloc[:, j+1], missing='drop').fit()
+    y_predict = model.predict(df.iloc[:, j+1])
+    rmse = sm.tools.eval_measures.rmse(df.temp, y_predict)
+
+    text = 'R-Squared:{:.4f} \np-Value:{:.4f}'.format(
+        model.rsquared, model.pvalues[0])
+    ax[j].plot(df.iloc[:, j+1], y_predict,
                linestyle="-", color="r")
-    ax[i].annotate(text, xy=(0, 1.2), xycoords='axes fraction',
-                   fontsize=8, color='r')
+    ax[j].annotate(text, xy=(0, 1.1),
+                   xycoords='axes fraction', fontsize=8, color='r')
+
+
+# Creates subplots that look at the entire year of data by each year
+gas_name = ["CO", "NO2", "O3", "PM 2.5", "PM 10"]
+
+titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
+          "Temperature", "Precipitation Total"]
+
+list_yrs = np.unique(df.date.dt.year)
+df_group = df.groupby(df.date.dt.year)
+fig.tight_layout(h_pad=2)
+fig.text(0.5, 0.00, "Units", ha='center')
+fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
+
+for j in range(len(gas_name)):
+    fig.suptitle("Correlation Graph between " +
+                 gas_name[j] + " and Temperature for Each Year", y=1)
+    fig, ax = plt.subplots(len(list_yrs), figsize=(15, 20))
+
+    for i in range(len(list_yrs)-1):
+        ax[i].scatter(df_group.get_group(list_yrs[i]).iloc[:, j+1],
+                      df_group.get_group(list_yrs[i]).temp)
+        ax[i].set_title(str(list_yrs[i]))
+        model = sm.OLS(df_group.get_group(list_yrs[i]).temp,
+                       df_group.get_group(list_yrs[i]).iloc[:, j+1], missing='drop').fit()
+        y_predict = model.predict(df_group.get_group(list_yrs[i]).iloc[:, j+1])
+        rmse = sm.tools.eval_measures.rmse(
+            df_group.get_group(list_yrs[i]).temp, y_predict)
+
+        text = 'R-Squared:{:.4f} \np-Value:{:.4f}'.format(
+            model.rsquared, model.pvalues[0])
+        ax[i].plot(df_group.get_group(list_yrs[i]).iloc[:, j+1], y_predict,
+                   linestyle="-", color="r")
+        ax[i].annotate(text, xy=(0, 1.1),
+                       xycoords='axes fraction', fontsize=8, color='r')
