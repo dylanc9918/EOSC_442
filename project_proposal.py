@@ -207,7 +207,7 @@ for j in range(len(list_gas)):
                        xycoords='axes fraction', fontsize=8, color='r')
 
 
-# Creates subplots that look at the entire year of data by year
+# Creates subplots perfrom linear regression on all of the data
 
 gas_name = ["CO", "NO2", "O3", "PM 2.5", "PM 10"]
 
@@ -223,16 +223,17 @@ for j in range(len(list_gas)):
     fig.suptitle(
         "Correlation Graph between gas and Temperature Across all Years", y=1.05)
 
-    ax[j].scatter(df.iloc[:, j+1], df.temp)
+    gas_year_list = list(df.iloc[:, j+1])
+    ax[j].scatter(gas_year_list, df.temp)
+    gas_year_list = sm.add_constant(gas_year_list)
     ax[j].set_title(gas_name[j])
     model = sm.OLS(df.temp,
-                   df.iloc[:, j+1], missing='drop').fit()
-    y_predict = model.predict(df.iloc[:, j+1])
-    rmse = sm.tools.eval_measures.rmse(df.temp, y_predict)
+                   gas_year_list, missing='drop').fit()
+    y_predict = model.predict(gas_year_list)
 
-    text = 'R-Squared:{:.4f} \np-Value:{:.4f}'.format(
+    text = 'R-Squared:{:.4f} \np-Value:{:.2E}'.format(
         model.rsquared, model.pvalues[0])
-    ax[j].plot(df.iloc[:, j+1], y_predict,
+    ax[j].plot(gas_year_list[:, 1], y_predict,
                linestyle="-", color="r")
     ax[j].annotate(text, xy=(0, 1.1),
                    xycoords='axes fraction', fontsize=8, color='r')
@@ -256,8 +257,8 @@ for j in range(len(gas_name)):
     fig, ax = plt.subplots(len(list_yrs), figsize=(15, 20))
 
     for i in range(len(list_yrs)-1):
-        ax[i].scatter(df_group.get_group(list_yrs[i]).iloc[:, j+1],
-                      df_group.get_group(list_yrs[i]).temp)
+        ax[i].plot(df_group.get_group(list_yrs[i]).iloc[:, j+1],
+                   df_group.get_group(list_yrs[i]).temp)
         ax[i].set_title(str(list_yrs[i]))
         model = sm.OLS(df_group.get_group(list_yrs[i]).temp,
                        df_group.get_group(list_yrs[i]).iloc[:, j+1], missing='drop').fit()
