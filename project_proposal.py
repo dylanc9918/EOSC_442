@@ -179,9 +179,9 @@ titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
 units = ["ppm", "ppb", "ppb"]
 
 for j in range(len(list_gas)):
+    fig, ax = plt.subplots(4, figsize=(8, 15))
     fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
     season = ["Winter", "Spring", "Summer", "Fall"]
-    fig, ax = plt.subplots(4, figsize=(8, 15))
     fig.tight_layout(h_pad=2)
     fig.suptitle("Seasonal Correlation Graph between " +
                  titles[j] + " and Temperature", y=1.05)
@@ -207,9 +207,9 @@ for j in range(len(list_gas)):
                        xycoords='axes fraction', fontsize=8, color='r')
 
 
-# Creates subplots perfrom linear regression on all of the data
+# Creates subplots perfrom linear regression on all of the data for gases and Temperature
 
-gas_name = ["CO", "NO2", "O3", "PM 2.5", "PM 10"]
+gas_name = ["CO", "NO2", "O3"]
 
 titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
           "Temperature", "Precipitation Total"]
@@ -239,34 +239,73 @@ for j in range(len(list_gas)):
                    xycoords='axes fraction', fontsize=8, color='r')
 
 
-# Creates subplots that look at the entire year of data by each year
-gas_name = ["CO", "NO2", "O3", "PM 2.5", "PM 10"]
+# Creates subplots perfrom linear regression on all of the data for Particulate matter and precip
 
-titles = ["CO", "NO2", "O3", "PM 2.5", "PM 10",
+part_name = ["PM25", "PM10"]
+part_mat_list = [season_PM25_list, season_PM10_list]
+
+titles = ["PM 2.5", "PM 10"]
+fig, ax = plt.subplots(len(part_mat_list))
+fig.tight_layout(h_pad=2)
+
+fig.text(0.5, 0.00, "ug/m3", ha='center')
+fig.text(0.00, 0.5, 'Precip (mm)', va='center', rotation='vertical')
+
+
+for j in range(len(part_mat_list)):
+    fig.suptitle(
+        "Correlation Graph between Particulate Matter and Precipation Across all Years", y=1.05)
+
+    part_year_list = list(df.loc[:, part_name[j]])
+
+    ax[j].scatter(part_year_list, df.PRECIP_TOTAL_mm)
+    part_year_list = sm.add_constant(part_year_list)
+    ax[j].set_title(titles[j])
+
+    model = sm.OLS(df.PRECIP_TOTAL_mm,
+                   part_year_list, missing='drop').fit()
+    y_predict_part = model.predict(part_year_list)
+
+    text = 'R-Squared:{:.4f} \np-Value:{:.2E}'.format(
+        model.rsquared, model.pvalues[0])
+
+    ax[j].plot(part_year_list[:, 1], y_predict,
+               linestyle="-", color="r")
+
+    ax[j].annotate(text, xy=(0, 1.1),
+                   xycoords='axes fraction', fontsize=8, color='r')
+
+
+# Creates subplots that look at the entire year of data by each year
+gas_name = ["PM25", "PM10"]
+
+titles = ["PM 2.5", "PM 10",
           "Temperature", "Precipitation Total"]
 
-list_yrs = np.unique(df.date.dt.year)
+list_yrs = [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+
 df_group = df.groupby(df.date.dt.year)
 fig.tight_layout(h_pad=2)
 fig.text(0.5, 0.00, "Units", ha='center')
-fig.text(0.00, 0.5, 'Temp (C°)', va='center', rotation='vertical')
+fig.text(0.00, 0.5, 'Precip (mm)', va='center', rotation='vertical')
 
 for j in range(len(gas_name)):
     fig.suptitle("Correlation Graph between " +
-                 gas_name[j] + " and Temperature for Each Year", y=1)
-    fig, ax = plt.subplots(len(list_yrs), figsize=(15, 20))
+                 gas_name[j] + " and Precipitaion for Each Year", y=.9)
+    fig, ax = plt.subplots(len(list_yrs), figsize=(10, 15))
 
-    for i in range(len(list_yrs)-1):
-        ax[i].plot(df_group.get_group(list_yrs[i]).iloc[:, j+1],
-                   df_group.get_group(list_yrs[i]).temp)
+    for i in range(len(list_yrs)):
+        ax[i].scatter(df_group.get_group(list_yrs[i]).loc[:, gas_name[j]],
+                      df_group.get_group(list_yrs[i]).PRECIP_TOTAL_mm)
         ax[i].set_title(str(list_yrs[i]))
-        model = sm.OLS(df_group.get_group(list_yrs[i]).temp,
-                       df_group.get_group(list_yrs[i]).iloc[:, j+1], missing='drop').fit()
-        y_predict = model.predict(df_group.get_group(list_yrs[i]).iloc[:, j+1])
+        model = sm.OLS(df_group.get_group(list_yrs[i]).PRECIP_TOTAL_mm,
+                       df_group.get_group(list_yrs[i]).loc[:, gas_name[j]], missing='drop').fit()
+        y_predict = model.predict(df_group.get_group(
+            list_yrs[i]).loc[:, gas_name[j]])
 
         text = 'R-Squared:{:.4f} \np-Value:{:.2E}'.format(
             model.rsquared, model.pvalues[0])
-        ax[i].plot(df_group.get_group(list_yrs[i]).iloc[:, j+1], y_predict,
+        ax[i].plot(df_group.get_group(list_yrs[i]).loc[:, gas_name[j]], y_predict,
                    linestyle="-", color="r")
-        ax[i].annotate(text, xy=(0, 1.1),
+        ax[i].annotate(text, xy=(.8, .8),
                        xycoords='axes fraction', fontsize=8, color='r')
